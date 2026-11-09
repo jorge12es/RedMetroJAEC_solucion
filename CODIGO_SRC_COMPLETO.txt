@@ -1,0 +1,1678 @@
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/RedMetroApp.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1;
+
+import java.util.Scanner;
+
+import es.madrid.redmetro.eva1.ficheros.GestorFicheroCSV;
+import es.madrid.redmetro.eva1.ficheros.GestorFicherosXML;
+import es.madrid.redmetro.eva1.model.Linea;
+import es.madrid.redmetro.eva1.service.LineaService;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 28 nov 2024
+ */
+public class RedMetroApp {
+	public static void main(String[] args) {
+		RedMetroApp app = new RedMetroApp();
+
+		// Tratamiento de lógica de negocio
+		String operacion = app.obtenerOperacionProcesar();
+
+		app.ejecutarFuncionalidadesRedMetro(operacion);
+	}
+
+	private String obtenerOperacionProcesar() {
+		Scanner entrada = new Scanner(System.in);
+
+		System.out.println("Menú:");
+		System.out.println("  A: Consultar Información Línea-Color");
+		System.out.println("  B: Procesar fichero Cocheras.csv");
+		System.out.println("  C: Procesar Fichero XML de Trenes-Estaciones-Accesos");
+		System.out.println("  D: Cargar información Trenes-Linea-Color en fichero XML");
+		System.out.println("----------------------------------------------------------");
+		System.out.println("Introduce la operación a realizar:");
+		// Operación recogida
+		String operacion = entrada.nextLine().trim();
+
+		while (!("ABCD".contains(operacion))) {
+			System.out.println("Has seleccionado un operación errónea (ha de ser un número entre A y D)");
+			System.out.print("Introduce la operación a realizar:");
+
+			// Operación recogida
+			operacion = entrada.nextLine();
+		}
+		System.out.println("Operación a realizar: " + operacion);
+		// Cerrar la entrada del Scanner
+		entrada.close();
+
+		return operacion;
+	}
+
+	public void ejecutarFuncionalidadesRedMetro(String operacion) {
+		try {
+			switch (operacion) {
+			case "A": { // Consulta Linea-Color
+				System.out.println("Ejecutar consultarLineaColor");
+				LineaService lineaService= new LineaService();
+				Linea linea = lineaService.obtenerLineaPorClave(13);
+				
+				String textoLinea = "La Línea %s (%d) tiene como color %s (%s)";
+				textoLinea = textoLinea.formatted(linea.getNombreLargo(), linea.getIdentificador(),
+						linea.getColor().getNombre(), linea.getColor().getCodigoHexadecimal());
+				System.out.println(textoLinea);
+				break;
+			}
+			case "B": { // Procesar Fichero CSV Cocheras
+				System.out.println("Ejecutar procesarFicheroCocheraCSV");
+				GestorFicheroCSV gestorFicheros = new GestorFicheroCSV();
+				gestorFicheros.procesarFicheroCocheraCSV();
+				break;
+			}
+			case "C": { // Procesar Fichero XML Trenes
+				System.out.println("Ejecutar procesarFicheroTrenXML");
+				GestorFicherosXML gestorFicheros = new GestorFicherosXML();
+
+				gestorFicheros.procesarListaTrenesDeDOM();
+				break;
+			}
+			case "D": { // Crear fichero XML a partir de información de Trenes-Línea-Color
+				System.out.println("Ejecutar crearFicheroXMLInforTrenes");
+				GestorFicherosXML gestorFicheros = new GestorFicherosXML();
+
+				gestorFicheros.escribirFicheroXMLDOMDeBBDD();
+				break;
+			}
+			default: {
+				break;
+			}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/IAccesoDAO.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma)
+ * Fecha: 04 nov 2026
+ */
+public interface IAccesoDAO {
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/ICocheraDAO.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao;
+
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Cochera;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma)
+ * Fecha: 04 nov 2026
+ */
+public interface ICocheraDAO {
+	public boolean existeCochera(int idCochera) throws RedMetroException;
+
+	public void insertarCochera(Cochera cochera) throws RedMetroException;
+	
+	public void borrarCochera(int idCochera) throws RedMetroException;
+	
+	public void actualizarCochera(Cochera cochera) throws RedMetroException;
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/IColorDAO.java
+================================================================================
+
+package es.madrid.redmetro.eva1.dao;
+
+/**
+ *
+ * IColordDAO: Clase que maneja las operaciones de acceso a datos para la entidad Color.
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 04 nov 2026
+ * 
+ * 
+ */
+
+public interface IColorDAO {
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/ILineaDAO.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao;
+
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Linea;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma)
+ * Fecha: 04 nov 2026
+ */
+public interface ILineaDAO {
+	public Linea obtenerInformacionLinea(int idLinea) throws RedMetroException;
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/ILineaEstacionDAO.java
+================================================================================
+
+package es.madrid.redmetro.eva1.dao;
+
+/**
+ *
+ * IColordDAO: Clase que maneja las operaciones de acceso a datos para la entidad Color.
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 04 nov 2026
+ * 
+ * 
+ */
+
+public interface ILineaEstacionDAO {
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/ITrenDAO.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao;
+
+import java.util.List;
+
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Tren;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma)
+ * Fecha: 04 nov 2026
+ */
+public interface ITrenDAO {
+	public void insertarTren(Tren tren) throws RedMetroException;
+
+	public List<Tren> obtenerListaTrenes() throws RedMetroException;
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/impl/CocheraDaoJDBC.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao.impl;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import es.madrid.redmetro.eva1.dao.ICocheraDAO;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Cochera;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class CocheraDaoJDBC implements ICocheraDAO {
+	private final Connection conexion;
+
+	public CocheraDaoJDBC(Connection conexion) {
+		this.conexion = conexion;
+	}
+
+	@Override
+	public boolean existeCochera(int idCochera) throws RedMetroException{
+		boolean existeCochera = false;
+		String sentenciaSQL = """
+				SELECT EXISTS(
+					SELECT 1
+					FROM T_COCHERA
+					WHERE identificador = ?
+					) AS existe_cochera
+				""";
+		// try con recursos "cerrables": Connection, Statement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+
+			pstm.setInt(1, idCochera);
+			System.out.println(pstm);
+
+			ResultSet resultadoSentencia = pstm.executeQuery();
+			if (resultadoSentencia.next()) {
+				existeCochera = resultadoSentencia.getBoolean("existe_cochera");
+			}
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al validar si existe una cochera.", e);
+		}
+
+		return existeCochera;
+	}
+
+	public void insertarCochera(Cochera cochera) throws RedMetroException{
+
+		String sentenciaSQL = "INSERT INTO T_COCHERA VALUES (?, ?, ? , ?)";
+
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+
+			pstm.setInt(1, cochera.getIdentificador());
+			pstm.setString(2, cochera.getNombre());
+			pstm.setString(3, cochera.getDireccion());
+			pstm.setBoolean(4, cochera.isDeposito());
+
+			System.out.println(pstm);
+
+			pstm.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al crear una nueva cochera.", e);
+		}
+
+	}
+
+	public void borrarCochera(int idCochera) throws RedMetroException{
+
+		String sentenciaSQL = "DELETE FROM T_COCHERA WHERE identificador = ?";
+
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+
+			pstm.setInt(1, idCochera);
+			System.out.println(pstm);
+
+			pstm.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al borrar una cochera.", e);
+		}
+
+	}
+
+	public void actualizarCochera(Cochera cochera) throws RedMetroException{
+
+		String sentenciaSQL = """
+				UPDATE T_COCHERA
+				SET nombre = ?, direccion = ? , deposito = ?
+				WHERE identificador = ?
+				""";
+
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+			System.out.println(sentenciaSQL);
+
+			pstm.setString(1, cochera.getNombre());
+			pstm.setString(2, cochera.getDireccion());
+			pstm.setBoolean(3, cochera.isDeposito());
+			pstm.setInt(4, cochera.getIdentificador());
+
+			System.out.println(pstm);
+
+			pstm.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al actualizar una cochera.", e);
+		}
+
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/impl/LineaDaoJDBC.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao.impl;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import es.madrid.redmetro.eva1.dao.ILineaDAO;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Color;
+import es.madrid.redmetro.eva1.model.Linea;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class LineaDaoJDBC implements ILineaDAO {
+	private final Connection conexion;
+
+	public LineaDaoJDBC(Connection conexion) {
+		this.conexion = conexion;
+	}
+
+	public Linea obtenerInformacionLinea(int idLinea) throws RedMetroException{
+		Linea linea = null;
+
+		String sentenciaSQL = """
+				SELECT * 
+				FROM T_COLOR color JOIN T_LINEA linea
+					ON color.identificador = linea.id_color
+				WHERE linea.identificador = ?
+				""";
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+			pstm.setInt(1, idLinea);
+//			System.out.println(pstm);
+			ResultSet resultadoSentencia = pstm.executeQuery();
+
+			if (resultadoSentencia.next()) {
+
+				linea = new Linea();
+				linea.setIdentificador(resultadoSentencia.getInt("linea.identificador"));
+				linea.setNombreCorto(resultadoSentencia.getString("linea.nombre_corto"));
+				linea.setNombreLargo(resultadoSentencia.getString("linea.nombre_largo"));
+				linea.setKilometros(resultadoSentencia.getFloat("linea.kilometros"));
+
+				Color color = new Color();
+				color.setIdentificador(resultadoSentencia.getInt("color.identificador"));
+				color.setCod_hexadecimal(resultadoSentencia.getString("color.cod_hexadecimal"));
+				color.setNombre(resultadoSentencia.getString("color.nombre"));
+
+				linea.setColor(color);
+			}
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la información de una línea de metro.", e);
+		}
+
+		return linea;
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/dao/impl/TrenDaoJDBC.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.dao.impl;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import es.madrid.redmetro.eva1.dao.ITrenDAO;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.model.Cochera;
+import es.madrid.redmetro.eva1.model.Color;
+import es.madrid.redmetro.eva1.model.Linea;
+import es.madrid.redmetro.eva1.model.Tren;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class TrenDaoJDBC implements ITrenDAO {
+	private final Connection conexion;
+
+	public TrenDaoJDBC(Connection conexion) {
+		this.conexion = conexion;
+	}
+
+	public void insertarTren(Tren tren) throws RedMetroException {
+		String sentenciaSQL = "INSERT INTO T_TREN VALUES (?, ?, ? , ?, ?, ?)";
+
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+
+			pstm.setInt(1, tren.getIdentificador());
+			pstm.setString(2, tren.getModelo());
+			pstm.setString(3, tren.getEmpresaConstructora());
+			// Obtener java.sql.Date de Un java.util.Date
+			pstm.setDate(4, Date.valueOf(tren.getFechaIncorporacion()));
+			pstm.setInt(5, tren.getCochera().getIdentificador());
+			pstm.setInt(6, tren.getLinea().getIdentificador());
+
+			System.out.println(pstm);
+
+			pstm.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al crear un nuevo tren.", e);
+		}
+	}
+
+	@Override
+	public List<Tren> obtenerListaTrenes() throws RedMetroException {
+		List<Tren> listaTrenes = null;
+
+		String sentenciaSQL = """
+				SELECT *
+				FROM T_TREN tren join T_LINEA linea
+					ON tren.id_linea =linea.identificador
+					join T_COCHERA cochera
+					on tren.id_cochera =cochera.identificador
+					join T_COLOR color
+					on linea.id_color =color.identificador
+				""";
+
+		// try con recursos "cerrables": PreparedStatement, ResultSet
+		try (PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);) {
+
+			System.out.println(pstm);
+
+			ResultSet resultadoSentencia = pstm.executeQuery();
+			while (resultadoSentencia.next()) {
+				if (listaTrenes == null) {
+					listaTrenes = new ArrayList<Tren>();
+				}
+				Tren tren = new Tren();
+				tren.setIdentificador(resultadoSentencia.getInt("tren.identificador"));
+				tren.setEmpresaConstructora(resultadoSentencia.getString("tren.empresa_constructora"));
+				tren.setModelo(resultadoSentencia.getString("tren.modelo"));
+				tren.setFechaIncorporacion(resultadoSentencia.getDate("tren.fecha_incorporacion").toLocalDate());
+
+				// Información de la Línea
+				Linea linea = new Linea();
+				linea.setIdentificador(resultadoSentencia.getInt("linea.identificador"));
+				linea.setKilometros(resultadoSentencia.getFloat("linea.kilometros"));
+				linea.setNombreCorto(resultadoSentencia.getString("linea.nombre_corto"));
+				linea.setNombreLargo(resultadoSentencia.getString("linea.nombre_largo"));
+
+				// Información de Color
+				Color color = new Color();
+				color.setIdentificador(resultadoSentencia.getInt("color.identificador"));
+				color.setNombre(resultadoSentencia.getString("color.nombre"));
+				color.setCod_hexadecimal(resultadoSentencia.getString("color.cod_hexadecimal"));
+
+				linea.setColor(color);
+
+				tren.setLinea(linea);
+
+				// Información de la Cochera
+				Cochera cochera = new Cochera();
+				cochera.setIdentificador(resultadoSentencia.getInt("cochera.identificador"));
+				cochera.setDeposito(resultadoSentencia.getBoolean("cochera.deposito"));
+				cochera.setDireccion(resultadoSentencia.getString("cochera.direccion"));
+				cochera.setNombre(resultadoSentencia.getString("cochera.nombre"));
+				tren.setCochera(cochera);
+
+				listaTrenes.add(tren);
+
+			}
+
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la lista de trenes existentes.", e);
+		}
+
+		return listaTrenes;
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/excepcion/RedMetroException.java
+================================================================================
+
+package es.madrid.redmetro.eva1.excepcion;
+
+
+/**
+ *
+ * FormacionException: Clase abstracta que representa la excepción base del proyecto Formacion
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 15 oct 2026
+ * 
+ * 
+ */
+
+public class RedMetroException extends Exception {
+	private static final long serialVersionUID = 1L;
+	
+	public RedMetroException(String mensaje) {
+        super(mensaje);
+    }
+
+	public RedMetroException(String mensaje, Throwable causa) {
+        super(mensaje, causa);
+    }
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/ficheros/GestorFicheroCSV.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.ficheros;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.gestores.GestorConfiguracion;
+import es.madrid.redmetro.eva1.model.Cochera;
+import es.madrid.redmetro.eva1.service.CocheraService;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha:  04 nov 20267
+ */
+public class GestorFicheroCSV {
+	private CocheraService cocheraService;
+	
+	private final static String SEPARADOR_CSV = GestorConfiguracion.getSeparadorFicheroCSVCochera();
+
+	public void procesarFicheroCocheraCSV() throws RedMetroException {
+
+		String nombreFicheroCSV = GestorConfiguracion.getRutaFicheroCSVCochera();
+
+		try (BufferedReader br = new BufferedReader(new FileReader(nombreFicheroCSV));) {
+			br.readLine(); // Saltar la cabecera
+			String linea;
+			while ((linea = br.readLine()) != null) {
+				String[] datosLinea = linea.split(SEPARADOR_CSV);
+				int operacion = Integer.parseInt(datosLinea[0]);
+				int idCochera = Integer.parseInt(datosLinea[1]);
+				int depositoInt = Integer.parseInt(datosLinea[2]);
+				boolean esDeposito = (depositoInt == 1) ? true : false;
+				String nombre = datosLinea[3];
+				String direccion = datosLinea[4];
+
+				// se cargan los datos en el objeto Cochera
+				Cochera cochera = new Cochera();
+				cochera.setIdentificador(idCochera);
+				cochera.setNombre(nombre);
+				cochera.setDireccion(direccion);
+				cochera.setDeposito(esDeposito);
+
+				cocheraService  = new CocheraService();
+				if (operacion == 1) {
+					boolean existeCochera = cocheraService.existeCocheraPorClave(cochera.getIdentificador());
+					if (!existeCochera) { // Si no existe, la insertamos
+						cocheraService.insertarCochera(cochera);
+					}
+				} else if (operacion == 2) {
+					cocheraService.actualizarCochera(cochera);
+				} else if (operacion == 3) {
+					cocheraService.borrarCochera(idCochera);
+				}
+
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/ficheros/GestorFicherosXML.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.ficheros;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.gestores.GestorConfiguracion;
+import es.madrid.redmetro.eva1.model.Cochera;
+import es.madrid.redmetro.eva1.model.Linea;
+import es.madrid.redmetro.eva1.model.Tren;
+import es.madrid.redmetro.eva1.service.TrenService;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 28 nov 2024
+ */
+public class GestorFicherosXML {
+	TrenService trenService;
+
+	public void procesarListaTrenesDeDOM() throws RedMetroException {
+		String nombreFicheroXML = GestorConfiguracion.getRutaFicheroLecturaXMLTren();
+		// Tratamiento del fichero XML
+		File file = new File(nombreFicheroXML);
+
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder;
+		Document doc = null;
+		try {
+			dBuilder = dbFactory.newDocumentBuilder();
+			doc = dBuilder.parse(file);
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// estos métodos podemos usarlos combinados para normalizar el archivo XML
+		doc.getDocumentElement().normalize();
+
+		// Obtener la lista de nodos cuya etiqueta es "tren"
+		NodeList nList = doc.getElementsByTagName("tren");
+
+		System.out.println("Número de Trenes: " + nList.getLength());
+		trenService = new TrenService();
+		// Recorrer los distintos nodos Tren
+		for (int temp = 0; temp < nList.getLength(); temp++) {
+			Node nodoTren = nList.item(temp);
+
+			if (nodoTren.getNodeType() == Node.ELEMENT_NODE) {
+				Element eElement = (Element) nodoTren;
+				// Obtener información del tren
+				int idTren = Integer.parseInt(eElement.getAttribute("id"));
+				String modelo = eElement.getElementsByTagName("modelo").item(0).getTextContent();
+				String anyoFabricacion = eElement.getElementsByTagName("anyo_incorporacion").item(0).getTextContent();
+				String empresaConstructora = eElement.getElementsByTagName("empresa_constructora").item(0)
+						.getTextContent();
+				int idCochera = Integer.parseInt(eElement.getElementsByTagName("cod_cochera").item(0).getTextContent());
+				int idLinea = Integer.parseInt(eElement.getElementsByTagName("id_linea").item(0).getTextContent());
+
+				Tren tren = new Tren();
+				tren.setIdentificador(idTren);
+				tren.setEmpresaConstructora(empresaConstructora);
+				tren.setModelo(modelo);
+
+				LocalDate fechaFabricacion = LocalDate.of(Integer.parseInt(anyoFabricacion), 1, 1);
+				tren.setFechaIncorporacion(fechaFabricacion);
+
+				tren.setModelo(modelo);
+
+				Cochera cochera = new Cochera();
+				cochera.setIdentificador(idCochera);
+				tren.setCochera(cochera);
+				Linea linea = new Linea();
+				linea.setIdentificador(idLinea);
+				;
+				tren.setLinea(linea);
+
+				// Insertar el tren en la base de datos
+				trenService.insertarTren(tren);
+			}
+		}
+
+	}
+
+	public void escribirFicheroXMLDOMDeBBDD() throws RedMetroException {
+		// Obtener la información de Trenes-Línea-Color desde BBDD
+		trenService = new TrenService();
+		List<Tren> listaTrenes = trenService.obtenerListaTrenes();
+		System.out.println(listaTrenes);
+
+		String nombreFicheroXML = GestorConfiguracion.getRutaFicheroEscrituraXMLTren();
+		// Tratamiento del fichero XML
+		File file = new File(nombreFicheroXML);
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder;
+		Document doc = null;
+		try {
+			dBuilder = dbFactory.newDocumentBuilder();
+			doc = dBuilder.newDocument();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// Elemento raíz
+		Element raiz = doc.createElement("info-trenes-linea-color");
+		doc.appendChild(raiz);
+
+		Element trenes = doc.createElement("trenes");
+		raiz.appendChild(trenes);
+
+		// Recorrer la lista de trenes
+		for (Tren tren : listaTrenes) {
+			// Elemento tren
+			Element trenElement = doc.createElement("tren");
+			trenElement.setAttribute("id", String.valueOf(tren.getIdentificador()));
+
+			// Elemento modelo
+			Element modeloElement = doc.createElement("modelo");
+			modeloElement.appendChild(doc.createTextNode(tren.getModelo()));
+			trenElement.appendChild(modeloElement);
+
+			// Elemento anyo_incorporacion
+			int anyoIncorporacion = tren.getFechaIncorporacion().getYear();
+			Element anyoElement = doc.createElement("anyo_incorporacion");
+			anyoElement.appendChild(doc.createTextNode(String.valueOf(anyoIncorporacion)));
+			trenElement.appendChild(anyoElement);
+
+			// Elemento empresa_constructora
+			Element empresaElement = doc.createElement("empresa_constructora");
+			empresaElement.appendChild(doc.createTextNode(tren.getEmpresaConstructora()));
+			trenElement.appendChild(empresaElement);
+
+			// Elemento cod_cochera
+			Element cocheraElement = doc.createElement("cod_cochera");
+			cocheraElement.appendChild(doc.createTextNode(String.valueOf(tren.getCochera().getIdentificador())));
+			trenElement.appendChild(cocheraElement);
+
+			// Elemento linea
+			Element lineaElement = doc.createElement("linea");
+			lineaElement.setAttribute("id", String.valueOf(tren.getIdentificador()));
+			// Elemento nombre
+			Element nombreLineaElement = doc.createElement("nombre_l");
+			nombreLineaElement.appendChild(doc.createTextNode(tren.getLinea().getNombreLargo()));
+			lineaElement.appendChild(nombreLineaElement);
+			// Elemento color
+			Element colorElement = doc.createElement("color");
+			colorElement.setAttribute("id", String.valueOf(tren.getLinea().getColor().getIdentificador()));
+			colorElement.setAttribute("cod_hex", String.valueOf(tren.getLinea().getColor().getCodigoHexadecimal()));
+			// Elemento descripcion del color
+			Element descripocionColorElement = doc.createElement("descripcion");
+			descripocionColorElement.appendChild(doc.createTextNode(tren.getLinea().getColor().getNombre()));
+			colorElement.appendChild(descripocionColorElement);
+
+			// Añadir la línea al elemento tren
+			lineaElement.appendChild(colorElement);
+
+			// Añadir la línea al elemento tren
+			trenElement.appendChild(lineaElement);
+
+			// Añadir el tren al elemento raíz
+			trenes.appendChild(trenElement);
+		}
+
+		// Con el objeto DOM se escribe el documento XML en el fichero
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer;
+		try {
+			transformer = transformerFactory.newTransformer();
+			// Opcional: Configurar para una salida legible (indentación)
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty("{xml.apache.org}indent-amount", "4");
+
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(file);
+
+			// Transformar (escribir) el documento en el archivo
+			transformer.transform(source, result);
+
+			System.out.println("Archivo XML ' " + trenService + "' creado exitosamente.");
+		} catch (TransformerConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/gestores/GestorConexionesJDBC.java
+================================================================================
+
+package es.madrid.redmetro.eva1.gestores;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+/**
+ *
+ * GestorConfiguracion: Clase que carga la configuración de la aplicación desde
+ * un fichero de propiedades
+ * 
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 8 oct 2026
+ * 
+ * 
+ */
+
+public class GestorConexionesJDBC {
+
+	// Constructor privado: de esta manera conseguimos que esta clase no se puede
+	// instanciar.
+	private GestorConexionesJDBC() {
+	}
+
+	public static Connection obtenerConexion() throws SQLException {
+		Connection conexion = null;
+
+		String urlConexionCompleta = GestorConfiguracion.getConexionURL() + GestorConfiguracion.getNombreBBDD();
+		String usuarioBBDD = GestorConfiguracion.getUsuarioBBDD();
+		String claveBBDD = GestorConfiguracion.getClaveBBDD();
+		conexion = DriverManager.getConnection(urlConexionCompleta, usuarioBBDD, claveBBDD);
+
+		return conexion;
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/gestores/GestorConfiguracion.java
+================================================================================
+
+package es.madrid.redmetro.eva1.gestores;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+/**
+ *
+ * GestorConfiguracion: Clase que carga la configuración de la aplicación desde
+ * un fichero de propiedades
+ * 
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 8 oct 2026
+ * 
+ * 
+ */
+
+public class GestorConfiguracion {
+	private static final String RUTA_FICHERO_CONFIGURACION = "app.properties";
+	private static final Properties PROPIEDADES_CONFIGURACION = new Properties();
+
+	// Constructor privado: de esta manera conseguimos que esta clase no se puede
+	// instanciar.
+	private GestorConfiguracion() {
+	}
+
+	// Este bloque se ejecuta una sola vez, cuando se carga la clase
+	// GestorConfiguracion
+	static {
+		try (InputStream inputStream = GestorConfiguracion.class.getClassLoader().getResourceAsStream(RUTA_FICHERO_CONFIGURACION);)
+		        {
+
+		    if (inputStream == null) {
+		        throw new IOException(
+		            "No se encuentra "+ RUTA_FICHERO_CONFIGURACION + " en el classpath");
+		    }
+			PROPIEDADES_CONFIGURACION.load(inputStream);
+			// System.out.println(PROPIEDADES_CONFIGURACION);
+		} catch (IOException e) {
+			throw new RuntimeException("No se ha podido cargar el fichero de configuración", e);
+		}
+	}
+
+	public static String getConexionURL() {
+		return PROPIEDADES_CONFIGURACION.getProperty("sgdb.conexion.url");
+	}
+
+	public static String getNombreBBDD() {
+		return PROPIEDADES_CONFIGURACION.getProperty("bbdd.nombre");
+	}
+	
+	public static String getUsuarioBBDD() {
+		return PROPIEDADES_CONFIGURACION.getProperty("bbdd.usuario");
+	}
+	
+	public static String getClaveBBDD() {
+		return PROPIEDADES_CONFIGURACION.getProperty("bbdd.clave");
+	}
+
+	public static String getRutaFicheroCSVCochera() {
+		return PROPIEDADES_CONFIGURACION.getProperty("cochera.fichero.csv");
+	}
+	public static String getSeparadorFicheroCSVCochera() {
+		return PROPIEDADES_CONFIGURACION.getProperty("cochera.csv.separador");
+	}
+
+	public static String getRutaFicheroLecturaXMLTren() {
+		return PROPIEDADES_CONFIGURACION.getProperty("tren.fichero.lectura.xml");
+	}
+
+	public static String getRutaFicheroEscrituraXMLTren() {
+		return PROPIEDADES_CONFIGURACION.getProperty("tren.fichero.escritura.xml");
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Acceso.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class Acceso implements Serializable {
+	private static final long serialVersionUID = 1;
+
+	private int identificador;
+	private String nombre;
+	private boolean accesible;
+	private Estacion estacion;
+
+
+	public int getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public boolean isAccesible() {
+		return accesible;
+	}
+
+	public void setAccesible(boolean accesible) {
+		this.accesible = accesible;
+	}
+
+	public Estacion getEstacion() {
+		return estacion;
+	}
+
+	public void setEstacion(Estacion estacion) {
+		this.estacion = estacion;
+	}
+
+	@Override
+	public String toString() {
+		return "Acceso [identificador=" + identificador + ", nombre=" + nombre + ", accesible=" + accesible
+				+ ", estacion=" + estacion + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Cochera.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma)
+ * Fecha: 04 nov 2026
+ */
+public class Cochera implements Serializable{
+	private static final long serialVersionUID = 3155379009944780512L;
+
+	  private int identificador;
+	  private String nombre;
+	  private String direccion;
+	  private boolean deposito;
+
+
+	/**
+	 * @return the nombre
+	 */
+	public String getNombre() {
+		return nombre;
+	}
+	/**
+	 * @param nombre the nombre to set
+	 */
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+	/**
+	 * @return the direccion
+	 */
+	public String getDireccion() {
+		return direccion;
+	}
+	/**
+	 * @param direccion the direccion to set
+	 */
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
+	}
+	/**
+	 * @return the deposito
+	 */
+	public boolean isDeposito() {
+		return deposito;
+	}
+	/**
+	 * @param deposito the deposito to set
+	 */
+	public void setDeposito(boolean deposito) {
+		this.deposito = deposito;
+	}
+	public int getIdentificador() {
+		return identificador;
+	}
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+	@Override
+	public String toString() {
+		return "Cochera [identificador=" + identificador + ", nombre=" + nombre + ", direccion=" + direccion
+				+ ", deposito=" + deposito + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Color.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class Color implements Serializable {
+	private static final long serialVersionUID = 3295865115889018033L;
+
+	private int identificador;
+	private String nombre;
+	private String codigoHexadecimal;
+
+	/**
+	 * @return the nombre
+	 */
+	public String getNombre() {
+		return nombre;
+	}
+
+	/**
+	 * @param nombre the nombre to set
+	 */
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	/**
+	 * @return the cod_hexadecimal
+	 */
+	public String getCodigoHexadecimal() {
+		return codigoHexadecimal;
+	}
+
+	/**
+	 * @param cod_hexadecimal the cod_hexadecimal to set
+	 */
+	public void setCod_hexadecimal(String cod_hexadecimal) {
+		this.codigoHexadecimal = cod_hexadecimal;
+	}
+
+	public int getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+
+	public void setCodigoHexadecimal(String codigoHexadecimal) {
+		this.codigoHexadecimal = codigoHexadecimal;
+	}
+
+	@Override
+	public String toString() {
+		return "Color [identificador=" + identificador + ", nombre=" + nombre + ", codigoHexadecimal="
+				+ codigoHexadecimal + "]";
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Estacion.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class Estacion implements Serializable {
+	private static final long serialVersionUID = -4550346449635360036L;
+
+	private int identificador;
+	private String nombre;
+	private String direccion;
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public String getDireccion() {
+		return direccion;
+	}
+
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
+	}
+
+	public int getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+
+	@Override
+	public String toString() {
+		return "Estacion [identificador=" + identificador + ", nombre=" + nombre + ", direccion=" + direccion + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Linea.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class Linea implements Serializable {
+	private static final long serialVersionUID = 2546017016457301339L;
+
+	private int identificador;
+	private String nombreCorto;
+	private String nombreLargo;
+	private LocalDate fechaInauguracion;
+	private float kilometros;
+	private Color color;
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+	}
+
+	/**
+	 * @return the nombreCorto
+	 */
+	public String getNombreCorto() {
+		return nombreCorto;
+	}
+
+	/**
+	 * @param nombreCorto the nombreCorto to set
+	 */
+	public void setNombreCorto(String nombreCorto) {
+		this.nombreCorto = nombreCorto;
+	}
+
+	/**
+	 * @return the nombreLargo
+	 */
+	public String getNombreLargo() {
+		return nombreLargo;
+	}
+
+	/**
+	 * @param nombreLargo the nombreLargo to set
+	 */
+	public void setNombreLargo(String nombreLargo) {
+		this.nombreLargo = nombreLargo;
+	}
+
+	/**
+	 * @return the kilometros
+	 */
+	public float getKilometros() {
+		return kilometros;
+	}
+
+	/**
+	 * @param kilometros the kilometros to set
+	 */
+	public void setKilometros(float kilometros) {
+		this.kilometros = kilometros;
+	}
+
+	public int getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+
+	public LocalDate getFechaInauguracion() {
+		return fechaInauguracion;
+	}
+
+	public void setFechaInauguracion(LocalDate fechaInauguracion) {
+		this.fechaInauguracion = fechaInauguracion;
+	}
+
+	@Override
+	public String toString() {
+		return "Linea [identificador=" + identificador + ", nombreCorto=" + nombreCorto + ", nombreLargo=" + nombreLargo
+				+ ", fechaInauguracion=" + fechaInauguracion + ", kilometros=" + kilometros + ", color=" + color + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/LineaEstacion.java
+================================================================================
+
+package es.madrid.redmetro.eva1.model;
+
+/**
+ *
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 04 nov 2026*
+ * 
+ */
+
+public class LineaEstacion {
+	private Estacion estacion;
+	private Linea linea;
+	private int orden;
+
+	public Estacion getEstacion() {
+		return estacion;
+	}
+
+	public void setEstacion(Estacion estacion) {
+		this.estacion = estacion;
+	}
+
+	public Linea getLinea() {
+		return linea;
+	}
+
+	public void setLinea(Linea linea) {
+		this.linea = linea;
+	}
+
+	public int getOrden() {
+		return orden;
+	}
+
+	public void setOrden(int orden) {
+		this.orden = orden;
+	}
+
+	@Override
+	public String toString() {
+		return "LineaEstacion [estacion=" + estacion + ", linea=" + linea + ", orden=" + orden + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/model/Tren.java
+================================================================================
+
+/**
+ * 
+ */
+package es.madrid.redmetro.eva1.model;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+
+/**
+ * @author Isidoro Nevares Martín (IES Virgen de la Paloma) Fecha: 04 nov 2026
+ */
+public class Tren implements Serializable {
+	private static final long serialVersionUID = 3033036838329546838L;
+
+	private int identificador;
+	private String modelo;
+	private String empresaConstructora;
+	private LocalDate fechaIncorporacion;
+	private Cochera cochera;
+	private Linea linea;
+
+	/**
+	 * @return the modelo
+	 */
+	public String getModelo() {
+		return modelo;
+	}
+
+	/**
+	 * @param modelo the modelo to set
+	 */
+	public void setModelo(String modelo) {
+		this.modelo = modelo;
+	}
+
+	/**
+	 * @return the empresaConstructora
+	 */
+	public String getEmpresaConstructora() {
+		return empresaConstructora;
+	}
+
+	/**
+	 * @param empresaConstructora the empresaConstructora to set
+	 */
+	public void setEmpresaConstructora(String empresaConstructora) {
+		this.empresaConstructora = empresaConstructora;
+	}
+
+	/**
+	 * @return the cochera
+	 */
+	public Cochera getCochera() {
+		return cochera;
+	}
+
+	/**
+	 * @param cochera the cochera to set
+	 */
+	public void setCochera(Cochera cochera) {
+		this.cochera = cochera;
+	}
+
+	/**
+	 * @return the linea
+	 */
+	public Linea getLinea() {
+		return linea;
+	}
+
+	/**
+	 * @param linea the linea to set
+	 */
+	public void setLinea(Linea linea) {
+		this.linea = linea;
+	}
+
+	public int getIdentificador() {
+		return identificador;
+	}
+
+	public void setIdentificador(int identificador) {
+		this.identificador = identificador;
+	}
+
+	public LocalDate getFechaIncorporacion() {
+		return fechaIncorporacion;
+	}
+
+	public void setFechaIncorporacion(LocalDate fechaIncorporacion) {
+		this.fechaIncorporacion = fechaIncorporacion;
+	}
+
+	@Override
+	public String toString() {
+		return "Tren [identificador=" + identificador + ", modelo=" + modelo + ", empresaConstructora="
+				+ empresaConstructora + ", fechaIncorporacion=" + fechaIncorporacion + ", cochera=" + cochera
+				+ ", linea=" + linea + "]";
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/service/CocheraService.java
+================================================================================
+
+package es.madrid.redmetro.eva1.service;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import es.madrid.redmetro.eva1.dao.ICocheraDAO;
+import es.madrid.redmetro.eva1.dao.impl.CocheraDaoJDBC;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.gestores.GestorConexionesJDBC;
+import es.madrid.redmetro.eva1.model.Cochera;
+
+/**
+ *
+ * CocheraService: Clase que realiza la lógica de negocio de una cochera.
+ * 
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 4 nov 2026
+ * 
+ * 
+ */
+
+public class CocheraService {
+	public boolean existeCocheraPorClave(int idCochera) throws RedMetroException {
+		boolean existeFP = false;
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ICocheraDAO iCocheraDAO = new CocheraDaoJDBC(conexion);
+			existeFP = iCocheraDAO.existeCochera(idCochera);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+		return existeFP;
+	}
+
+	public void insertarCochera(Cochera cochera) throws RedMetroException {
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ICocheraDAO iCocheraDAO = new CocheraDaoJDBC(conexion);
+			iCocheraDAO.insertarCochera(cochera);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+	}
+
+	public void actualizarCochera(Cochera cochera) throws RedMetroException {
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ICocheraDAO iCocheraDAO = new CocheraDaoJDBC(conexion);
+			iCocheraDAO.actualizarCochera(cochera);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+	}
+
+	public void borrarCochera(int idCochera) throws RedMetroException {
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ICocheraDAO iCocheraDAO = new CocheraDaoJDBC(conexion);
+			iCocheraDAO.borrarCochera(idCochera);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+
+	}
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/service/LineaService.java
+================================================================================
+
+package es.madrid.redmetro.eva1.service;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import es.madrid.redmetro.eva1.dao.ILineaDAO;
+import es.madrid.redmetro.eva1.dao.impl.LineaDaoJDBC;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.gestores.GestorConexionesJDBC;
+import es.madrid.redmetro.eva1.model.Linea;
+
+/**
+ *
+ * LineaService: Clase que realiza la lógica de negocio de una línea de metro.
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 4 nov 2026
+ * 
+ * 
+ */
+
+public class LineaService {
+	public Linea obtenerLineaPorClave(int idLinea) throws RedMetroException {
+		Linea linea = null;
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ILineaDAO iLineaDAO = new LineaDaoJDBC(conexion);
+			linea = iLineaDAO.obtenerInformacionLinea(idLinea);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+		return linea;
+	}
+
+}
+
+
+================================================================================
+ARCHIVO: src/es/madrid/redmetro/eva1/service/TrenService.java
+================================================================================
+
+package es.madrid.redmetro.eva1.service;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+import es.madrid.redmetro.eva1.dao.ITrenDAO;
+import es.madrid.redmetro.eva1.dao.impl.TrenDaoJDBC;
+import es.madrid.redmetro.eva1.excepcion.RedMetroException;
+import es.madrid.redmetro.eva1.gestores.GestorConexionesJDBC;
+import es.madrid.redmetro.eva1.model.Tren;
+
+/**
+ *
+ * TrenService: Clase que realiza la lógica de negocio de un tren.
+ * @author Isidoro Nevares Martín - IES Virgen de la Paloma
+ * @date 4 nov 2026
+ * 
+ * 
+ */
+
+public class TrenService {
+	public List<Tren> obtenerListaTrenes() throws RedMetroException {
+		List<Tren> listaTrenes = null;
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ITrenDAO iTrenDAO = new TrenDaoJDBC(conexion);
+			listaTrenes = iTrenDAO.obtenerListaTrenes();
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+		return listaTrenes;
+	}
+
+	public void insertarTren(Tren tren) throws RedMetroException {
+
+		try (Connection conexion = GestorConexionesJDBC.obtenerConexion();) {
+			ITrenDAO iTrenDAO = new TrenDaoJDBC(conexion);
+			iTrenDAO.insertarTren(tren);
+		} catch (SQLException e) {
+			throw new RedMetroException("Error al obtener la conexión", e);
+		}
+	}
+
+}
